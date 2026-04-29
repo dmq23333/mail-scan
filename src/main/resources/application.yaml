@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: job-mail-scan
+
+  # ── Datasource (MySQL for dev/prod; overridden to H2 in test profile) ──
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/${MYSQL_DATABASE:jobscan}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${MYSQL_USER:jobscan}
+    password: ${MYSQL_PASSWORD:jobscan}
+
+  h2:
+    console:
+      enabled: false
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: openid, profile, email, https://www.googleapis.com/auth/gmail.readonly
+            redirect-uri: '{baseUrl}/login/oauth2/code/{registrationId}'
+            authorization-grant-type: authorization_code
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
+            user-name-attribute: sub
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+
+gmail:
+  credentials-file: classpath:credentials.json
+  tokens-directory: ${user.home}/.credentials/job-mail-scan
+  user-id: me
+
+# Notes:
+# - Put your Google OAuth client credentials in environment variables GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+#   or override these values here for local testing.
+# - Place the OAuth client credentials JSON (if using the google-client libraries directly) under
+#   src/main/resources/credentials.json and adjust the path above.
+# - The gmail scopes above use readonly; change to full access if you need to modify messages.

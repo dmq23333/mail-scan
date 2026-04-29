@@ -1,0 +1,11 @@
+target
+.git
+**/src/test
+**/.git
+.env
+src/main/resources/credentials.json
+data
+*.log
+node_modules
+Dockerfile
+
