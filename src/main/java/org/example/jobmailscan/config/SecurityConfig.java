@@ -1,6 +1,7 @@
 package org.example.jobmailscan.config;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,7 +9,6 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -23,9 +23,8 @@ public class SecurityConfig {
 			// 1. Cors support
 			.cors(Customizer.withDefaults())
 
-			// 2. use csrf
-			.csrf(csrf -> csrf
-				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+			// 2. CSRF disabled for local dev; re-enable when Angular frontend is ready
+			.csrf(csrf -> csrf.disable())
 
 			// 3. Auth control
 			.authorizeHttpRequests(auth -> auth
@@ -54,7 +53,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // 前端地址
+		configuration.setAllowedOrigins(List.of("http://localhost:4200")); // 前端地址
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
 		configuration.setAllowCredentials(true); // Allow Cookie/Token
