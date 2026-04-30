@@ -5,10 +5,12 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -23,7 +25,7 @@ public class SecurityConfig {
 			// 1. Cors support
 			.cors(Customizer.withDefaults())
 
-			// 2. CSRF disabled for local dev; re-enable when Angular frontend is ready
+			// 2. CSRF disabled
 			.csrf(csrf -> csrf.disable())
 
 			// 3. Auth control
@@ -44,6 +46,14 @@ public class SecurityConfig {
 			.logout(logout -> logout
 				.logoutSuccessUrl("http://localhost:4200/")
 				.deleteCookies("JSESSIONID")
+			)
+
+			// 6. Return 401 for unauthenticated /api/** requests instead of redirecting to OAuth2
+			.exceptionHandling(ex -> ex
+				.defaultAuthenticationEntryPointFor(
+					new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+					request -> request.getRequestURI().startsWith("/api/")
+				)
 			);
 
 		return http.build();

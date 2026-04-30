@@ -6,8 +6,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.criteria.Predicate;
-
 import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -15,12 +13,14 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.google.api.services.gmail.model.Message;
+import jakarta.persistence.criteria.Predicate;
 import org.example.jobmailscan.dto.JobApplicationDTO;
 import org.example.jobmailscan.entity.JobApplication;
 import org.example.jobmailscan.entity.OfferStatus;
 import org.example.jobmailscan.repository.JobApplicationRepository;
 import org.example.jobmailscan.util.JobApplicationClassifier;
 import org.example.jobmailscan.util.MailParser;
+import org.example.jobmailscan.util.ScanConstants;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.stereotype.Service;
@@ -33,11 +33,6 @@ public class JobApplicationService {
 	 * Gmail search query for job-related emails.
 	 * Covers common confirmation, rejection, and interview invitation phrases.
 	 */
-	private static final String JOB_GMAIL_QUERY =
-		"subject:(application OR interview OR offer OR rejection OR \"thank you for applying\" " +
-			"OR \"we received your application\" OR \"application received\" OR \"application viewed\" " +
-			"OR \"not moving forward\" OR \"next steps\")";
-
 	private static final int PAGE_SIZE = 100;
 
 	private final JobApplicationRepository repository;
@@ -100,8 +95,10 @@ public class JobApplicationService {
 
 		return repository.findAll(spec).stream()
 			.sorted((a, b) -> {
-				if (a.getAppliedDate() == null) return 1;
-				if (b.getAppliedDate() == null) return -1;
+				if (a.getAppliedDate() == null)
+					return 1;
+				if (b.getAppliedDate() == null)
+					return -1;
 				return b.getAppliedDate().compareTo(a.getAppliedDate());
 			})
 			.map(JobApplicationDTO::from).toList();
@@ -120,7 +117,7 @@ public class JobApplicationService {
 		throws Exception {
 
 		Gmail gmail = buildGmailService(client);
-		String query = (customQuery != null && !customQuery.isBlank()) ? customQuery : JOB_GMAIL_QUERY;
+		String query = (customQuery != null && !customQuery.isBlank()) ? customQuery : ScanConstants.JOB_GMAIL_QUERY;
 
 		List<JobApplicationDTO> synced = new ArrayList<>();
 		String pageToken = null;
@@ -142,6 +139,15 @@ public class JobApplicationService {
 				Message detail = gmail.users().messages().get("me", stub.getId())
 					.setFormat("full")
 					.execute();
+
+				String from = detail.getPayload() == null ? "" :
+					detail.getPayload().getHeaders().stream()
+					.filter(h -> "From".equalsIgnoreCase(h.getName()))
+					.map(h -> h.getValue())
+					.findFirst().orElse("");
+
+				if (ScanConstants.SKIPPED_SENDERS.stream().anyMatch(s -> from.toLowerCase().contains(s.toLowerCase())))
+					continue;
 
 				JobApplication app = buildFromMessage(detail);
 				repository.save(app);
