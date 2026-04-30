@@ -20,7 +20,7 @@ public final class ScanConstants {
 	 * Emails from these senders are skipped during sync.
 	 */
 	public static final List<String> SKIPPED_SENDERS = List.of(
-		"noreply@s.seek.com.au"
+		"donotreply@jora.com"
 	);
 
 	// ─── Platform Detection ───────────────────────────────────────────────────
