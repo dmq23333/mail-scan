@@ -6,6 +6,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.criteria.Predicate;
+
 import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -19,6 +21,7 @@ import org.example.jobmailscan.entity.OfferStatus;
 import org.example.jobmailscan.repository.JobApplicationRepository;
 import org.example.jobmailscan.util.JobApplicationClassifier;
 import org.example.jobmailscan.util.MailParser;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,6 +76,35 @@ public class JobApplicationService {
 		return repository.findByCompanyNameContainingIgnoreCaseOrJobTitleContainingIgnoreCase(
 				keyword, keyword)
 			.stream().map(JobApplicationDTO::from).toList();
+	}
+
+	public List<JobApplicationDTO> filter(LocalDate appliedAfter, String companyName,
+		OfferStatus offerStatus, String resumeVersion, String platform) {
+
+		Specification<JobApplication> spec = (root, query, cb) -> {
+			List<Predicate> predicates = new ArrayList<>();
+
+			if (appliedAfter != null)
+				predicates.add(cb.greaterThanOrEqualTo(root.get("appliedDate"), appliedAfter));
+			if (companyName != null && !companyName.isBlank())
+				predicates.add(cb.like(cb.lower(root.get("companyName")), "%" + companyName.toLowerCase() + "%"));
+			if (offerStatus != null && offerStatus != OfferStatus.ALL)
+				predicates.add(cb.equal(root.get("offerStatus"), offerStatus));
+			if (resumeVersion != null && !resumeVersion.isBlank())
+				predicates.add(cb.like(cb.lower(root.get("resumeVersion")), "%" + resumeVersion.toLowerCase() + "%"));
+			if (platform != null && !platform.isBlank())
+				predicates.add(cb.like(cb.lower(root.get("platform")), "%" + platform.toLowerCase() + "%"));
+
+			return cb.and(predicates.toArray(new Predicate[0]));
+		};
+
+		return repository.findAll(spec).stream()
+			.sorted((a, b) -> {
+				if (a.getAppliedDate() == null) return 1;
+				if (b.getAppliedDate() == null) return -1;
+				return b.getAppliedDate().compareTo(a.getAppliedDate());
+			})
+			.map(JobApplicationDTO::from).toList();
 	}
 
 	// ─── Sync from Gmail ─────────────────────────────────────────────────────
@@ -143,6 +175,14 @@ public class JobApplicationService {
 			app.setMark(req.getMark());
 		if (req.getJd() != null)
 			app.setJd(req.getJd());
+		if (req.getResumeVersion() != null)
+			app.setResumeVersion(req.getResumeVersion());
+		if (req.getEmailSubject() != null)
+			app.setEmailSubject(req.getEmailSubject());
+		if (req.getEmailFrom() != null)
+			app.setEmailFrom(req.getEmailFrom());
+		if (req.getSnippet() != null)
+			app.setSnippet(req.getSnippet());
 
 		return JobApplicationDTO.from(repository.save(app));
 	}

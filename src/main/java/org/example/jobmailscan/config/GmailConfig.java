@@ -8,9 +8,14 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class GmailConfig {
-	@Bean
-	public JsonFactory jsonFactory() { return GsonFactory.getDefaultInstance(); }
 
 	@Bean
-	public NetHttpTransport netHttpTransport() { return new NetHttpTransport(); }
+	public JsonFactory jsonFactory() {
+		return GsonFactory.getDefaultInstance();
+	}
+
+	@Bean
+	public NetHttpTransport netHttpTransport() {
+		return new NetHttpTransport();
+	}
 }

@@ -22,8 +22,11 @@ public class MailController {
 	}
 
 	@GetMapping("/search")
-	public List<MailSummaryDTO> search(@RegisteredOAuth2AuthorizedClient("google") OAuth2AuthorizedClient authorizedClient,
-		@RequestParam(defaultValue = "is:unread") String q) throws Exception {
+	public List<MailSummaryDTO> search(
+		@RegisteredOAuth2AuthorizedClient("google")
+		OAuth2AuthorizedClient authorizedClient,
+		@RequestParam(defaultValue = "is:unread")
+		String q) throws Exception {
 		return gmailService.getRecentEmails(authorizedClient, q);
 	}
 }

@@ -1,12 +1,12 @@
 package org.example.jobmailscan.service;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
+import com.google.api.client.auth.oauth2.BearerToken;
+import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.auth.oauth2.BearerToken;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.google.api.services.gmail.model.Message;
@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class GmailService {
+
 	private final NetHttpTransport transport;
 	private final JsonFactory jsonFactory;
 
@@ -45,7 +46,7 @@ public class GmailService {
 		List<MailSummaryDTO> result = new ArrayList<>();
 		if (listResponse.getMessages() != null) {
 			for (Message msg : listResponse.getMessages()) {
-				// 2. 获取每封邮件详情以提取 Header
+				// 2. get detail info of email and extract header
 				Message detail = service.users().messages().get("me", msg.getId()).execute();
 				result.add(MailParser.parseToSummary(detail));
 			}

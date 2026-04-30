@@ -11,8 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
 	@GetMapping("/api/me")
-	public Map<String, Object> user(@AuthenticationPrincipal
-	OAuth2User principal) {
+	public Map<String, Object> user(
+		@AuthenticationPrincipal
+		OAuth2User principal) {
 		// Return User's basic google information to frontend
 		return principal.getAttributes();
 	}
