@@ -49,12 +49,22 @@ public final class ScanConstants {
 	// ─── Mail Parsing Patterns ────────────────────────────────────────────────
 
 	public static final List<Pattern> JOB_TITLE_PATTERNS = List.of(
-		Pattern.compile("(?i)application\\s+for\\s+(.+?)\\s+at\\s+"),
-		Pattern.compile("(?i)your\\s+application\\s+for\\s+(.+?)\\s+(?:at|to|has|is|–|-)"),
+		// "application for <title> at/to/with <company>"
+		Pattern.compile("(?i)(?:your\\s+)?application\\s+for\\s+(.+?)\\s+(?:at|to|with)\\s+"),
+		// "application for <title>" — title at end of subject
+		Pattern.compile("(?i)(?:your\\s+)?application\\s+for\\s+(.+?)\\s*$"),
+		// "applying for <title> at/to <company>"
+		Pattern.compile("(?i)applying\\s+for\\s+(.+?)\\s+(?:at|to|with)\\s+"),
+		// "applying for <title>" — title at end
+		Pattern.compile("(?i)applying\\s+for\\s+(.+?)\\s*$"),
+		// "interview invitation: <title> at/with"
 		Pattern.compile("(?i)interview\\s+(?:invitation|invite)\\s*[:\\-]\\s*(.+?)\\s+(?:at|to|with|–|-)"),
-		Pattern.compile("(?i)(?:re|regarding):\\s*(.+?)\\s+(?:at|to|–|-|\\[)"),
+		// "<title> - application received/confirmed"
 		Pattern.compile("(?i)(.+?)\\s*[-–]\\s*application\\s+(?:received|confirmed|submitted)"),
-		Pattern.compile("(?i)(.+?)\\s+position")
+		// "re: <title> at/to"
+		Pattern.compile("(?i)(?:re|regarding):\\s*(.+?)\\s+(?:at|to|–|-|\\[)"),
+		// "<title> position"
+		Pattern.compile("(?i)(.+?)\\s+position\\b")
 	);
 
 	public static final List<Pattern> COMPANY_FROM_SUBJECT_PATTERNS = List.of(
